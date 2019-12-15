@@ -154,6 +154,7 @@ export function defineReactive (
   }
 
   let childOb = !shallow && observe(val)
+  // Object.defineProperty只能劫持已有属性，并且需要遍历每一个属性，新增属性需要手动遍历
   Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,
@@ -194,9 +195,8 @@ export function defineReactive (
 }
 
 /**
- * Set a property on an object. Adds the new property and
- * triggers change notification if the property doesn't
- * already exist.
+ * this.$set源码
+ * 给一个对象设置属性，如果属性尚未存在，则添加新属性和触发器更改通知。
  */
 export function set (target: Array<any> | Object, key: any, val: any): any {
   if (process.env.NODE_ENV !== 'production' &&
@@ -204,11 +204,13 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
   ) {
     warn(`Cannot set reactive property on undefined, null, or primitive value: ${(target: any)}`)
   }
+  // 判断是否是数组，如果是，再判断是否是已有下标，触发已经被重写的数组方法 => 添加数据 => observeArray
   if (Array.isArray(target) && isValidArrayIndex(key)) {
     target.length = Math.max(target.length, key)
     target.splice(key, 1, val)
     return val
   }
+  // 判断对象（同理），(key in Object.prototype) 判断key是否是原始对象上面的方法
   if (key in target && !(key in Object.prototype)) {
     target[key] = val
     return val
